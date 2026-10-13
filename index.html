@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="Interactive mobile prototype: car shopping app home screen with live search, body-style filters and saves." />
+<title>Car Shopping &#8212; Home &amp; Search Prototype</title>
+</head>
+<body>
+
+<style>
+  /* ---------- tokens ---------- */
+  :root {
+    color-scheme: light;
+    --ground: #e7ecf3;
+    --ground-2: #f4f6fa;
+    --frame: #00002d;
+    --app-bg: #f6f8fb;
+    --surface: #ffffff;
+    --surface-2: #f1f4f9;
+    --ink: #00002d;
+    --ink-mid: #3a4871;
+    --ink-faint: #8c96ad;
+    --line: #dfe5ee;
+    --line-strong: #c3cdd5;
+    --accent: #0763d3;
+    --accent-ink: #ffffff;
+    --navy: #05317b;
+    --good-bg: #e6f4ea;   --good-fg: #10622e;
+    --ok-bg:   #e4f5fe;   --ok-fg:   #05317b;
+    --fair-bg: #fdf3e3;   --fair-fg: #7a5406;
+    --alert: #d42e2e;
+    --photo-1: #e4f5fe; --photo-2: #efe7fb; --photo-3: #e8f6ec;
+    --photo-4: #fdefe6; --photo-5: #eef1f6;
+    --car-body: #05317b; --car-glass: #ffffff; --car-tire: #00002d;
+    --shadow-frame: 0 24px 60px rgba(0, 0, 45, .3);
+    --shadow-card: 0 1px 3px rgba(0, 0, 45, .07);
+    --ui: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --data: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --ground: #0a101e; --ground-2: #121a2c;
+      --frame: #000010;
+      --app-bg: #0f1626; --surface: #161f33; --surface-2: #1d2740;
+      --ink: #f2f5fa; --ink-mid: #a7b3cc; --ink-faint: #6f7c97;
+      --line: #263251; --line-strong: #32405f;
+      --accent: #4f9bf5; --accent-ink: #061226;
+      --navy: #4f9bf5;
+      --good-bg: #123723; --good-fg: #7fd8a1;
+      --ok-bg:   #10294a; --ok-fg:   #9cc9f7;
+      --fair-bg: #3a2d10; --fair-fg: #e4c178;
+      --alert: #ff6b6b;
+      --photo-1: #1b2b45; --photo-2: #26203d; --photo-3: #16301f;
+      --photo-4: #35251c; --photo-5: #1d2436;
+      --car-body: #3f6fb8; --car-glass: #c9d8ef; --car-tire: #050a16;
+      --shadow-frame: 0 24px 60px rgba(0, 0, 0, .6);
+      --shadow-card: 0 1px 3px rgba(0, 0, 0, .4);
+    }
+  }
+  /* viewer toggle must win in both directions */
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --ground: #e7ecf3; --ground-2: #f4f6fa; --frame: #00002d;
+    --app-bg: #f6f8fb; --surface: #ffffff; --surface-2: #f1f4f9;
+    --ink: #00002d; --ink-mid: #3a4871; --ink-faint: #8c96ad;
+    --line: #dfe5ee; --line-strong: #c3cdd5;
+    --accent: #0763d3; --accent-ink: #ffffff; --navy: #05317b;
+    --good-bg: #e6f4ea; --good-fg: #10622e;
+    --ok-bg: #e4f5fe; --ok-fg: #05317b;
+    --fair-bg: #fdf3e3; --fair-fg: #7a5406;
+    --alert: #d42e2e;
+    --photo-1: #e4f5fe; --photo-2: #efe7fb; --photo-3: #e8f6ec;
+    --photo-4: #fdefe6; --photo-5: #eef1f6;
+    --car-body: #05317b; --car-glass: #ffffff; --car-tire: #00002d;
+    --shadow-frame: 0 24px 60px rgba(0, 0, 45, .3);
+    --shadow-card: 0 1px 3px rgba(0, 0, 45, .07);
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #0a101e; --ground-2: #121a2c; --frame: #000010;
+    --app-bg: #0f1626; --surface: #161f33; --surface-2: #1d2740;
+    --ink: #f2f5fa; --ink-mid: #a7b3cc; --ink-faint: #6f7c97;
+    --line: #263251; --line-strong: #32405f;
+    --accent: #4f9bf5; --accent-ink: #061226; --navy: #4f9bf5;
+    --good-bg: #123723; --good-fg: #7fd8a1;
+    --ok-bg: #10294a; --ok-fg: #9cc9f7;
+    --fair-bg: #3a2d10; --fair-fg: #e4c178;
+    --alert: #ff6b6b;
+    --photo-1: #1b2b45; --photo-2: #26203d; --photo-3: #16301f;
+    --photo-4: #35251c; --photo-5: #1d2436;
+    --car-body: #3f6fb8; --car-glass: #c9d8ef; --car-tire: #050a16;
+    --shadow-frame: 0 24px 60px rgba(0, 0, 0, .6);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, .4);
+  }
+
+  /* ---------- studio ground ---------- */
+  body {
+    margin: 0;
+    font-family: var(--ui);
+    color: var(--ink);
+    background:
+      radial-gradient(90% 60% at 50% 0%, var(--ground-2), transparent 70%),
+      var(--ground);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    padding: 36px 16px 56px;
+    box-sizing: border-box;
+  }
+
+  .masthead { width: 100%; max-width: 420px; }
+  .eyebrow {
+    font-size: 11px; font-weight: 600; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--ink-faint); margin: 0 0 6px;
+  }
+  .masthead h1 {
+    font-size: 21px; font-weight: 650; letter-spacing: -.015em;
+    margin: 0; text-wrap: balance;
+  }
+  .masthead p {
+    margin: 6px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-mid);
+    max-width: 58ch;
+  }
+
+  /* ---------- device ---------- */
+  .device {
+    width: 390px; height: 844px;
+    border: 10px solid var(--frame);
+    border-radius: 44px;
+    background: var(--app-bg);
+    box-shadow: var(--shadow-frame);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: none;
+  }
+  @media (max-width: 430px) {
+    .device { width: 100%; max-width: 360px; height: 760px; border-radius: 38px; }
+  }
+
+  .statusbar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 24px 2px;
+    font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums;
+  }
+  .statusbar .glyphs { display: flex; gap: 5px; align-items: center; opacity: .85; }
+  .bar { width: 3px; border-radius: 1px; background: currentColor; }
+
+  header.app {
+    background: var(--surface);
+    padding: 6px 16px 14px;
+    border-bottom: 1px solid var(--line);
+    position: relative; z-index: 3;
+  }
+  .locrow { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .loclabel { font-size: 12px; color: var(--ink-mid); }
+  .locbtn {
+    display: flex; align-items: center; gap: 5px;
+    margin-top: 2px; padding: 0; border: 0; background: none;
+    font: inherit; font-size: 15.5px; font-weight: 650; color: var(--ink);
+    cursor: pointer;
+  }
+  .bell {
+    position: relative; flex: none;
+    width: 40px; height: 40px; border: 0; border-radius: 50%;
+    background: var(--surface-2); color: var(--ink-mid);
+    display: grid; place-items: center; cursor: pointer;
+  }
+  .bell .dot {
+    position: absolute; top: 9px; right: 10px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--alert); border: 1.5px solid var(--surface-2);
+  }
+
+  /* search */
+  .searchwrap {
+    margin-top: 14px;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: 13px;
+    padding: 0 10px 0 12px;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .searchwrap:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  .searchwrap input {
+    flex: 1; min-width: 0; height: 48px;
+    border: 0; background: none; outline: none;
+    font: inherit; font-size: 15.5px; color: var(--ink);
+  }
+  .searchwrap input::placeholder { color: var(--ink-faint); }
+  .iconbtn {
+    flex: none; border: 0; background: none; padding: 2px;
+    color: var(--ink-mid); cursor: pointer; display: grid; place-items: center;
+  }
+  .divider { flex: none; width: 1px; height: 24px; background: var(--line-strong); }
+  .filterbtn { color: var(--accent); }
+
+  .suggest {
+    list-style: none; margin: 8px 0 0; padding: 0;
+    border: 1px solid var(--line); border-radius: 13px;
+    background: var(--surface); overflow: hidden;
+  }
+  .suggest:empty { display: none; }
+  .suggest button {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; padding: 11px 12px;
+    border: 0; background: none; font: inherit; font-size: 14.5px;
+    color: var(--ink); text-align: left; cursor: pointer;
+  }
+  .suggest button:hover, .suggest button:focus-visible { background: var(--surface-2); }
+  .suggest .match { font-weight: 650; }
+
+  .chips {
+    display: flex; gap: 8px; margin: 12px -16px 0; padding: 2px 16px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: none; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--line-strong); background: var(--surface);
+    color: var(--ink-mid); font: inherit; font-size: 13px;
+    padding: 7px 14px; transition: background .14s, color .14s, border-color .14s;
+  }
+  .chip[aria-pressed="true"] {
+    background: var(--navy); border-color: var(--navy);
+    color: var(--accent-ink); font-weight: 600;
+  }
+
+  /* scroll body */
+  main.app { flex: 1; overflow-y: auto; padding: 16px 16px 104px; scrollbar-width: thin; }
+  .sectitle {
+    margin: 0; font-size: 11.5px; font-weight: 650; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--ink-mid);
+  }
+  .pillrow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .pill {
+    display: flex; align-items: center; gap: 7px; cursor: pointer;
+    border: 1px solid var(--line-strong); border-radius: 999px;
+    background: var(--surface); color: var(--ink);
+    font: inherit; font-size: 13px; padding: 7px 13px;
+  }
+  .pill:hover { border-color: var(--accent); }
+
+  .makes {
+    display: flex; gap: 12px; margin: 12px -16px 0; padding: 2px 16px 4px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .makes::-webkit-scrollbar { display: none; }
+  .make {
+    flex: none; width: 72px; display: flex; flex-direction: column;
+    align-items: center; gap: 7px; border: 0; background: none;
+    padding: 0; cursor: pointer; color: var(--ink); font: inherit;
+  }
+  .make .badge {
+    width: 64px; height: 64px; border-radius: 18px;
+    border: 1px solid var(--line); background: var(--surface);
+    display: grid; place-items: center; font-size: 25px;
+    transition: transform .14s, border-color .14s;
+  }
+  .make:hover .badge { transform: translateY(-2px); border-color: var(--accent); }
+  .make span.name { font-size: 12px; }
+
+  .resulthead {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; margin-top: 22px;
+  }
+  .resulthead h2 { margin: 0; font-size: 17.5px; font-weight: 700; letter-spacing: -.01em; }
+  .count { font-size: 13px; color: var(--ink-mid); font-variant-numeric: tabular-nums; }
+
+  .cards { display: flex; flex-direction: column; gap: 14px; margin-top: 12px; }
+
+  .card {
+    border: 1px solid var(--line); border-radius: 17px;
+    background: var(--surface); box-shadow: var(--shadow-card);
+    overflow: hidden;
+  }
+  .photo { position: relative; height: 170px; }
+  .photo svg.art { display: block; width: 100%; height: 100%; }
+  .save {
+    position: absolute; top: 12px; right: 12px;
+    width: 36px; height: 36px; border: 0; border-radius: 50%;
+    background: var(--surface); color: var(--ink-mid);
+    display: grid; place-items: center; cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0, 0, 45, .22);
+    transition: transform .12s;
+  }
+  .save:active { transform: scale(.92); }
+  .save[aria-pressed="true"] { color: var(--alert); }
+  .save[aria-pressed="true"] svg { fill: var(--alert); }
+  .photocount {
+    position: absolute; bottom: 12px; left: 12px;
+    display: flex; align-items: center; gap: 5px;
+    background: rgba(0, 0, 45, .62); color: #fff;
+    border-radius: 999px; padding: 4px 9px;
+    font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums;
+  }
+  .cardbody { padding: 13px 14px 15px; }
+  .cardtop { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .cardtop h3 { margin: 0; font-size: 15.5px; font-weight: 650; line-height: 1.25; }
+  .price {
+    flex: none; font-family: var(--data); font-size: 16px; font-weight: 700;
+    letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+  }
+  .meta {
+    margin: 5px 0 0; font-size: 13px; color: var(--ink-mid);
+    font-variant-numeric: tabular-nums;
+  }
+  .deal {
+    display: inline-block; margin-top: 10px;
+    border-radius: 7px; padding: 4px 8px;
+    font-size: 11px; font-weight: 700; letter-spacing: .01em;
+  }
+
+  .empty {
+    margin-top: 14px; text-align: center;
+    border: 1px dashed var(--line-strong); border-radius: 17px;
+    background: var(--surface); padding: 38px 22px;
+  }
+  .empty strong { display: block; font-size: 15.5px; }
+  .empty p { margin: 6px 0 0; font-size: 13px; color: var(--ink-mid); }
+  .reset {
+    margin-top: 18px; border: 0; border-radius: 999px; cursor: pointer;
+    background: var(--accent); color: var(--accent-ink);
+    font: inherit; font-size: 14px; font-weight: 650; padding: 11px 22px;
+  }
+
+  .stub { margin-top: 28px; text-align: center; color: var(--ink-mid); }
+  .stub strong { display: block; font-size: 15.5px; color: var(--ink); }
+  .stub p { margin: 6px auto 0; font-size: 13px; max-width: 26ch; line-height: 1.5; }
+
+  /* bottom nav */
+  nav.tabbar {
+    position: absolute; inset: auto 0 0 0;
+    background: var(--surface); border-top: 1px solid var(--line);
+    padding: 7px 0 20px;
+    display: flex; justify-content: space-around; align-items: flex-start;
+  }
+  .tab {
+    width: 74px; border: 0; background: none; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    color: var(--ink-mid); font: inherit; font-size: 11px;
+  }
+  .tab[aria-selected="true"] { color: var(--accent); font-weight: 650; }
+  .tabcount {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  :where(button, input, a):focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px;
+  }
+
+  .hint {
+    max-width: 420px; width: 100%;
+    font-size: 12.5px; line-height: 1.6; color: var(--ink-mid);
+  }
+  .hint b { color: var(--ink); font-weight: 650; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="masthead">
+  <p class="eyebrow">Prototype &#183; mobile &#183; iPhone 14 frame</p>
+  <h1>Car shopping &#8212; home &amp; search</h1>
+  <p>The default home screen and its search behaviour. Search, suggestions, body-style
+     filters and saves are live against five sample listings.</p>
+</div>
+
+<div class="device" role="application" aria-label="Car shopping app prototype">
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="glyphs" aria-hidden="true">
+      <span class="bar" style="height:6px"></span>
+      <span class="bar" style="height:9px"></span>
+      <span class="bar" style="height:12px"></span>
+      <svg width="15" height="11" viewBox="0 0 15 11" fill="none" stroke="currentColor"
+           stroke-width="1.5" stroke-linecap="round">
+        <path d="M1 4.2a9 9 0 0 1 13 0M3.6 6.6a6 6 0 0 1 7.8 0" />
+        <circle cx="7.5" cy="9.2" r=".9" fill="currentColor" stroke="none" />
+      </svg>
+      <svg width="24" height="12" viewBox="0 0 24 12" fill="none">
+        <rect x=".75" y=".75" width="19.5" height="10.5" rx="3"
+              stroke="currentColor" stroke-opacity=".5" stroke-width="1.5" />
+        <rect x="2.5" y="2.5" width="16" height="7" rx="1.8" fill="currentColor" />
+        <path d="M21.8 4.2v3.6a2 2 0 0 0 0-3.6Z" fill="currentColor" fill-opacity=".5" />
+      </svg>
+    </span>
+  </div>
+
+  <header class="app">
+    <div class="locrow">
+      <div>
+        <div class="loclabel">Shopping near</div>
+        <button class="locbtn" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)"
+               stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z" />
+            <circle cx="12" cy="10" r="2.5" />
+          </svg>
+          Boston, MA 02116
+        </button>
+      </div>
+      <button class="bell" type="button" aria-label="Notifications">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 16V11a6 6 0 1 0-12 0v5l-1.5 2.5h15L18 16Z" />
+          <path d="M10 20a2 2 0 0 0 4 0" />
+        </svg>
+        <span class="dot"></span>
+      </button>
+    </div>
+
+    <div class="searchwrap">
+      <svg id="searchGlyph" width="19" height="19" viewBox="0 0 24 24" fill="none"
+           stroke="var(--ink-mid)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+      </svg>
+      <input id="q" type="search" autocomplete="off" aria-label="Search cars"
+             placeholder="Search make or model" />
+      <button class="iconbtn" id="clear" type="button" aria-label="Clear search" hidden>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+      </button>
+      <span class="divider"></span>
+      <button class="iconbtn filterbtn" type="button" aria-label="Filters">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+          <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+          <circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" />
+        </svg>
+      </button>
+    </div>
+
+    <ul class="suggest" id="suggest"></ul>
+
+    <div class="chips" id="chips" role="group" aria-label="Body style"></div>
+  </header>
+
+  <main class="app" id="screen"></main>
+
+  <nav class="tabbar" id="tabbar" role="tablist" aria-label="Main"></nav>
+</div>
+
+<p class="hint">
+  <b>Try it:</b> type &#8220;civ&#8221;, &#8220;suv&#8221; or &#8220;tesla&#8221; in the search field, tap a body-style chip to
+  narrow further, tap a heart to save a car, then open <b>Saved</b> in the tab bar.
+</p>
+
+<script>
+  const BODY_STYLES = [
+    { id: 'all', label: 'All' }, { id: 'suv', label: 'SUV' },
+    { id: 'sedan', label: 'Sedan' }, { id: 'truck', label: 'Truck' },
+    { id: 'ev', label: 'Electric' }, { id: 'coupe', label: 'Coupe' },
+  ];
+  const MAKES = [
+    { name: 'Toyota', emoji: '&#128663;' }, { name: 'Honda', emoji: '&#128665;' },
+    { name: 'Tesla', emoji: '&#9889;' }, { name: 'Ford', emoji: '&#128763;' },
+    { name: 'BMW', emoji: '&#127937;' },
+  ];
+  const RECENT = ['Toyota RAV4', 'Used SUV under $25k', 'Tesla Model 3'];
+
+  const LISTINGS = [
+    { id: 1, year: 2022, make: 'Toyota', model: 'RAV4 XLE', body: 'suv',
+      price: 27450, miles: 31200, city: 'Boston, MA', deal: 'Great Deal', photos: 24, tint: 1 },
+    { id: 2, year: 2021, make: 'Tesla', model: 'Model 3 Long Range', body: 'ev',
+      price: 31900, miles: 24800, city: 'Cambridge, MA', deal: 'Good Deal', photos: 18, tint: 2 },
+    { id: 3, year: 2023, make: 'Honda', model: 'Civic Sport', body: 'sedan',
+      price: 24300, miles: 12050, city: 'Quincy, MA', deal: 'Great Deal', photos: 31, tint: 3 },
+    { id: 4, year: 2020, make: 'Ford', model: 'F-150 Lariat', body: 'truck',
+      price: 38750, miles: 48900, city: 'Lowell, MA', deal: 'Fair Deal', photos: 15, tint: 4 },
+    { id: 5, year: 2022, make: 'BMW', model: '430i Coupe', body: 'coupe',
+      price: 42100, miles: 19400, city: 'Newton, MA', deal: 'Good Deal', photos: 27, tint: 5 },
+  ];
+
+  const DEAL = {
+    'Great Deal': ['--good-bg', '--good-fg'],
+    'Good Deal': ['--ok-bg', '--ok-fg'],
+    'Fair Deal': ['--fair-bg', '--fair-fg'],
+  };
+
+  const TABS = [
+    { id: 'search', label: 'Search' }, { id: 'sell', label: 'Sell' },
+    { id: 'saved', label: 'Saved' }, { id: 'account', label: 'Account' },
+  ];
+
+  const state = { q: '', body: 'all', tab: 'search', saved: new Set() };
+
+  const usd = n => '$' + n.toLocaleString('en-US');
+  const mi = n => n.toLocaleString('en-US') + ' mi';
+  const esc = s => String(s).replace(/[&<>"]/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  const TAB_ICON = {
+    search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+    sell: '<path d="M3 11.5 11.5 3H21v9.5L12.5 21 3 11.5Z"/><circle cx="16.5" cy="7.5" r="1.3"/>',
+    saved: '<path d="M12 20s-7-4.6-7-9.5A4 4 0 0 1 12 7a4 4 0 0 1 7 3.5c0 4.9-7 9.5-7 9.5Z"/>',
+    account: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c1.3-3.5 4-5 7-5s5.7 1.5 7 5"/>',
+  };
+  const icon = (paths, size, stroke) =>
+    `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none"
+      stroke="${stroke || 'currentColor'}" stroke-width="1.8" stroke-linecap="round"
+      stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+
+  const carArt = tint => `
+    <svg class="art" viewBox="0 0 320 170" preserveAspectRatio="xMidYMid slice"
+         style="background: var(--photo-${tint})" aria-hidden="true">
+      <ellipse cx="160" cy="137" rx="116" ry="11" fill="var(--car-tire)" opacity=".08"/>
+      <path d="M44 117c-8 0-13-5-13-13 0-11 7-17 18-20l20-26c5-7 12-10 21-10h66c10 0 18 4 24 11l18 22
+               21 5c13 3 20 9 20 18 0 8-5 13-13 13H44Z" fill="var(--car-body)" opacity=".9"/>
+      <path d="M91 61c3-4 7-6 12-6h53c6 0 11 2 15 7l13 16H78l13-17Z"
+            fill="var(--car-glass)" opacity=".72"/>
+      <circle cx="94" cy="117" r="18" fill="var(--car-tire)"/>
+      <circle cx="94" cy="117" r="8" fill="#c3cdd5"/>
+      <circle cx="214" cy="117" r="18" fill="var(--car-tire)"/>
+      <circle cx="214" cy="117" r="8" fill="#c3cdd5"/>
+    </svg>`;
+
+  function cardHTML(car) {
+    const [bg, fg] = DEAL[car.deal];
+    const on = state.saved.has(car.id);
+    return `
+      <article class="card">
+        <div class="photo">
+          ${carArt(car.tint)}
+          <button class="save" type="button" data-save="${car.id}"
+                  aria-pressed="${on}" aria-label="Save ${esc(car.year + ' ' + car.make + ' ' + car.model)}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="${on ? 'currentColor' : 'none'}"
+                 stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 20s-7-4.6-7-9.5A4 4 0 0 1 12 7a4 4 0 0 1 7 3.5c0 4.9-7 9.5-7 9.5Z"/>
+            </svg>
+          </button>
+          <span class="photocount">
+            ${icon('<path d="M3 8.5h3l1.5-2h9L18 8.5h3v10H3v-10Z"/><circle cx="12" cy="13" r="3"/>', 13, '#fff')}
+            ${car.photos}
+          </span>
+        </div>
+        <div class="cardbody">
+          <div class="cardtop">
+            <h3>${car.year} ${esc(car.make)} ${esc(car.model)}</h3>
+            <span class="price">${usd(car.price)}</span>
+          </div>
+          <p class="meta">${mi(car.miles)} &#183; ${esc(car.city)}</p>
+          <span class="deal" style="background:var(${bg});color:var(${fg})">${car.deal}</span>
+        </div>
+      </article>`;
+  }
+
+  function matches(car) {
+    const q = state.q.trim().toLowerCase();
+    const okBody = state.body === 'all' || car.body === state.body;
+    const hay = `${car.year} ${car.make} ${car.model} ${car.body} ${car.city}`.toLowerCase();
+    return okBody && (!q || hay.includes(q));
+  }
+
+  function renderChips() {
+    document.getElementById('chips').innerHTML = BODY_STYLES.map(s => `
+      <button class="chip" type="button" data-body="${s.id}"
+              aria-pressed="${state.body === s.id}">${s.label}</button>`).join('');
+  }
+
+  function renderSuggest() {
+    const q = state.q.trim().toLowerCase();
+    const el = document.getElementById('suggest');
+    if (!q || state.tab !== 'search') { el.innerHTML = ''; return; }
+    const hits = LISTINGS
+      .filter(c => `${c.make} ${c.model}`.toLowerCase().includes(q))
+      .slice(0, 4);
+    el.innerHTML = hits.map(c => {
+      const label = `${c.make} ${c.model}`;
+      const at = label.toLowerCase().indexOf(q);
+      const marked = esc(label.slice(0, at)) +
+        '<span class="match">' + esc(label.slice(at, at + q.length)) + '</span>' +
+        esc(label.slice(at + q.length));
+      return `<li><button type="button" data-suggest="${esc(label)}">
+                ${icon('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>', 15, 'var(--ink-faint)')}
+                <span>${marked}</span></button></li>`;
+    }).join('');
+  }
+
+  function renderTabs() {
+    document.getElementById('tabbar').innerHTML = TABS.map(t => {
+      const sel = state.tab === t.id;
+      const n = t.id === 'saved' && state.saved.size ? ` (${state.saved.size})` : '';
+      return `<button class="tab" type="button" role="tab" data-tab="${t.id}"
+                      aria-selected="${sel}">
+                ${icon(TAB_ICON[t.id], 22, sel ? 'var(--accent)' : 'var(--ink-mid)')}
+                <span class="tabcount">${t.label}${n}</span></button>`;
+    }).join('');
+  }
+
+  function renderScreen() {
+    const screen = document.getElementById('screen');
+
+    if (state.tab === 'saved') {
+      const cars = LISTINGS.filter(c => state.saved.has(c.id));
+      screen.innerHTML = `
+        <div class="resulthead">
+          <h2>Saved cars</h2>
+          <span class="count">${cars.length} ${cars.length === 1 ? 'car' : 'cars'}</span>
+        </div>
+        ${cars.length
+          ? `<div class="cards">${cars.map(cardHTML).join('')}</div>`
+          : `<div class="empty"><strong>Nothing saved yet</strong>
+               <p>Tap the heart on any listing to keep it here.</p>
+               <button class="reset" type="button" data-goto="search">Browse cars</button></div>`}`;
+      return;
+    }
+
+    if (state.tab !== 'search') {
+      const label = TABS.find(t => t.id === state.tab).label;
+      screen.innerHTML = `<div class="stub"><strong>${label}</strong>
+        <p>Not built in this prototype &#8212; it covers the home screen and search only.</p></div>`;
+      return;
+    }
+
+    const results = LISTINGS.filter(matches);
+    const searching = state.q.trim() !== '' || state.body !== 'all';
+
+    const browse = searching ? '' : `
+      <section>
+        <h2 class="sectitle">Recent searches</h2>
+        <div class="pillrow">${RECENT.map(t => `
+          <button class="pill" type="button" data-q="${esc(t)}">
+            ${icon('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>', 13, 'var(--ink-mid)')}
+            ${esc(t)}</button>`).join('')}
+        </div>
+      </section>
+      <section style="margin-top:22px">
+        <h2 class="sectitle">Browse by make</h2>
+        <div class="makes">${MAKES.map(m => `
+          <button class="make" type="button" data-q="${esc(m.name)}">
+            <span class="badge">${m.emoji}</span>
+            <span class="name">${esc(m.name)}</span></button>`).join('')}
+        </div>
+      </section>`;
+
+    const body = results.length
+      ? `<div class="cards">${results.map(cardHTML).join('')}</div>`
+      : `<div class="empty">
+           <strong>No matches for &#8220;${esc(state.q.trim() || BODY_STYLES.find(s => s.id === state.body).label)}&#8221;</strong>
+           <p>Try a different make or model, or clear your filters.</p>
+           <button class="reset" type="button" data-reset>Reset search</button>
+         </div>`;
+
+    screen.innerHTML = `${browse}
+      <div class="resulthead">
+        <h2>${searching ? 'Search results' : 'Deals near you'}</h2>
+        <span class="count">${results.length} ${results.length === 1 ? 'car' : 'cars'}</span>
+      </div>
+      ${body}`;
+  }
+
+  function render() {
+    document.getElementById('clear').hidden = state.q === '';
+    renderChips(); renderSuggest(); renderTabs(); renderScreen();
+  }
+
+  const input = document.getElementById('q');
+  input.addEventListener('input', e => { state.q = e.target.value; render(); });
+  input.addEventListener('focus', () =>
+    document.getElementById('searchGlyph').setAttribute('stroke', 'var(--accent)'));
+  input.addEventListener('blur', () =>
+    document.getElementById('searchGlyph').setAttribute('stroke', 'var(--ink-mid)'));
+
+  document.getElementById('clear').addEventListener('click', () => {
+    state.q = ''; input.value = ''; input.focus(); render();
+  });
+
+  document.querySelector('.device').addEventListener('click', e => {
+    const t = e.target.closest('[data-body],[data-suggest],[data-q],[data-save],[data-tab],[data-reset],[data-goto]');
+    if (!t) return;
+
+    if (t.dataset.body) state.body = t.dataset.body;
+    else if (t.dataset.suggest || t.dataset.q) {
+      state.q = t.dataset.suggest || t.dataset.q;
+      input.value = state.q;
+      state.tab = 'search';
+    } else if (t.dataset.save) {
+      const id = Number(t.dataset.save);
+      state.saved.has(id) ? state.saved.delete(id) : state.saved.add(id);
+    } else if (t.dataset.tab) state.tab = t.dataset.tab;
+    else if (t.dataset.goto) state.tab = t.dataset.goto;
+    else if (t.hasAttribute('data-reset')) { state.q = ''; state.body = 'all'; input.value = ''; }
+
+    render();
+  });
+
+  render();
+</script>
+</body>
+</html>
